@@ -167,9 +167,12 @@ class Helloworld extends WireData implements Module {
 	 *
 	 */
 	public function pageHelloHookExample($event) {
+	
+		// determine the page that our method hook was called on
+		$page = $event->object; 
 		
-		// return our configurable hello message
-		$event->return = $this->helloMessage;
+		// return our configurable hello message, along with some text indicating what the page is
+		$event->return = $this->helloMessage . " - This is page $page->path";
 		
 		if($event->arguments(0)) {
 			// if the method call had an argument, append it in the return value, just to
