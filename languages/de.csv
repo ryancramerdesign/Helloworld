@@ -1,0 +1,12 @@
+en,de,description,file,hash
+"You saved %s","Du hast %s gespeichert",,site/modules/Helloworld/Helloworld.module.php,0e484374330bffcaac65572c4ea7d864
+"Click here to edit this page","Klicken Sie hier, um diese Seite zu bearbeiten",,site/modules/Helloworld/Helloworld.module.php,d9eb892c81ab622c43f16ccaf79fda0c
+"This is page %s","Dies ist Seite %s",,site/modules/Helloworld/Helloworld.module.php,e41b70ed5e3c7d04c07aac8a921b10a3
+"Your hello world message","Deine Hallo-Welt-Nachricht",,site/modules/Helloworld/Helloworld.module.php,c637d50a9770e51a6b11bc56a9af0f63
+"This is here as an example of a configurable module property.","Dies ist hier ein Beispiel für eine konfigurierbare Moduleigenschaft.",,site/modules/Helloworld/Helloworld.module.php,bf06e12e83b81cce33f4d7d88e3ba51c
+"Use hello world message?","Hallo Weltnachricht verwenden?",,site/modules/Helloworld/Helloworld.module.php,d46de663e08f26edb4da448cb7c9892d
+"This will make your hello world message display at the bottom of every page.","Dadurch wird Ihre Hallo-Welt-Nachricht unten auf jeder Seite angezeigt.",,site/modules/Helloworld/Helloworld.module.php,c0d231ac237001a17a4a6c615d049c1a
+"The hello message will only be shown to users with edit access to the page.","Die Hallo-Nachricht wird nur Benutzern mit Bearbeitungszugriff auf die Seite angezeigt.",,site/modules/Helloworld/Helloworld.module.php,45854e8308170aed4a3448f75e6d2c87
+"Hello %s","Hallo %s",,site/modules/Helloworld/Helloworld.module.php,0ddbacf45ccb69765dca81521d95e629
+"Hello %s - You are editing the homepage!","Hallo %s - Du bearbeitest die Homepage!",,site/modules/Helloworld/Helloworld.module.php,b94b7631e7c64c91e859e75224f74e32
+"Hello World","Hallo Welt",,site/modules/Helloworld/Helloworld.module.php,b10a8db164e0754105b7a99be72e3fe5

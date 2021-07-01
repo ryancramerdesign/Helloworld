@@ -1,17 +1,13 @@
-<?php
+<?php namespace ProcessWire;
 
 /**
- * ProcessWire 'Hello world' demonstration module
+ * ProcessWire “Hello world” demonstration module
  *
  * Demonstrates the Module interface and how to add hooks.
- * This version of Helloworld requires ProcessWire 2.6.0 or newer.
+ * This version of Helloworld requires ProcessWire 3.0 or newer.
  * 
  * Copyright [year] by [your name]
- * 
- * ProcessWire 2.x 
- * Copyright (C) 2015 by Ryan Cramer 
- * Licensed under GNU/GPL v2, see LICENSE.TXT
- * https://processwire.com
+ * This module licensed under [choose your license: MPL 2.0 or MIT]
  * 
  * Below we use phpdoc syntax to identify the configurable properties
  * from our Helloworld.config.php file. This is optional, but may be
@@ -19,24 +15,39 @@
  * These properties will be automatically populated to your module, regardless
  * of whether or not you mention them here. See the Helloworld.config.php file.
  * 
+ * MODULE CONFIGURATION PROPERTIES
+ * ===============================
  * @property string $helloMessage The hello world message to display
  * @property int $useHello Whether or not our hello message is enabled
  *
  */
 
-class Helloworld extends WireData implements Module {
+class Helloworld extends WireData implements Module, ConfigurableModule {
+
+	/**
+	 * Construct
+	 * 
+	 * This is often used to set default values for configuration settings
+	 * 
+	 */
+	public function __construct() {
+		parent::__construct();
+		$this->set('helloMessage', 'Hello World');
+		$this->set('useHello', 0); 
+	}
 
 	/**
 	 * Initialize the module (optional)
 	 *
-	 * ProcessWire calls this when the module is loaded. For 'autoload' modules, this will be called
-	 * before ProcessWire's API is ready. This is a good place to attach hooks.
+	 * ProcessWire calls this method when the module is loaded. 
+	 * For 'autoload' modules, this will be called before ProcessWire’s API is ready. 
+	 * This is a good place to attach hooks (as is the 'ready' method).
 	 *
 	 */
 	public function init() {
 
 		// Add a hook after the $pages->save, to issue a notice every time a page is saved
-		$this->pages->addHookAfter('save', $this, 'pageSaveHookExample'); 
+		$this->pages->addHookAfter('saved', $this, 'pageSaveHookExample'); 
 
 		// note use of our configurable property: $this->useHello
 		if($this->useHello) {
@@ -55,28 +66,35 @@ class Helloworld extends WireData implements Module {
 		
 		// Add a 'hello_world' property to every page that returns "Hello [user]"
 		// Use "echo $page->hello_world;" in your template file to display output.
-		$this->addHookProperty('Page::hello_world', function($event) {
+		$this->addHookProperty('Page::hello_world', function(HookEvent $event) {
 			// Note: you can access any PW API variable directly from the $event object,
 			// as you can with most ProcessWire objects. Here we use it to access the
 			// $user API variable. 
-			$event->return = "Hello " . $event->user->name; 
+			$event->return = sprintf(__('Hello %s'), $event->user->name); 
 		}); 
 	
-		// This last example displays a special hello message when the user is editing
+		// This example displays a special hello message when the user is editing
 		// the homepage only. 	
-		$this->addHookBefore('ProcessPageEdit::execute', function($event) {
+		$this->addHookBefore('ProcessPageEdit::execute', function(HookEvent $event) {
 			$page = $event->object->getPage(); // getPage() is a method in ProcessPageEdit
 			if($page->id == 1) {
 				// user is editing the homepage
-				$event->message("Hello {$event->user->name} - You are editing the homepage!");
+				$event->message(sprintf(__('Hello %s - You are editing the homepage!'), $event->user->name));
 			} else {
 				// not the homepage, so we will stay silent
 			}
 		});
+	
+		// Example of a URL hook (requires ProcessWire 3.0.173+) outputs Hello World"
+		// when you access the URL /hello/world/ on your site. More information at:
+		// https://processwire.com/blog/posts/pw-3.0.173/
+		$this->addHook('/hello/world/', function(HookEvent $event) {
+			return __('Hello World');
+		});
 	}
 
 	/**
-	 * Called when ProcessWire's API is ready (optional)
+	 * Called when ProcessWire’s API is ready (optional)
 	 * 
 	 * This optional method is similar to that of init() except that it is called
 	 * after the current $page has been determined a and the API is fully ready to use.
@@ -97,13 +115,13 @@ class Helloworld extends WireData implements Module {
 	 * @param HookEvent $event
 	 *
 	 */
-	public function pageSaveHookExample($event) {
+	public function pageSaveHookExample(HookEvent $event) {
 		
 		// We ask for the first argument passed to the $pages->save($page) method, which is argument 0. 
 		// If preferred, you can also ask for an argument by name, i.e. $event->arguments('page'); 
 		
 		$page = $event->arguments(0); 
-		$this->message($this->helloMessage . " - You saved {$page->path}."); 
+		$this->message($this->helloMessage . ' - ' . sprintf($this->_('You saved %s'), $page->path)); 
 	}
 
 	/**
@@ -118,11 +136,11 @@ class Helloworld extends WireData implements Module {
 	 * @param HookEvent $event
 	 *
 	 */
-	public function pageRenderHookExample($event) {
+	public function pageRenderHookExample(HookEvent $event) {
 
 		// The $event->object is always the object hooked to, in this case a Page object,
 		// since the hook is to Page::render.
-		$page = $event->object; 
+		$page = $event->object; /** @var Page $page */
 		
 		// we are only going to show this message if the user is allowed to edit the page
 		// this makes this silly module a little more production site friendly, so we 
@@ -131,10 +149,12 @@ class Helloworld extends WireData implements Module {
 
 		// We are going to insert our configurable helloMessage into the output,
 		// but first we entity encode it for safety (to keep HTML out of it)
-		$helloMessage = $this->wire('sanitizer')->entities($this->helloMessage);
+		$helloMessage = $this->wire()->sanitizer->entities($this->helloMessage);
 		
 		// if not in the admin, tell them they can click it to edit the page
-		if($page->template != 'admin') $helloMessage .= "<br>Click here to edit this page";
+		if($page->template->name !== 'admin') {
+			$helloMessage .= '<br>' . $this->_('Click here to edit this page');
+		}
 		
 		// We are styling our output so that we can be certain it'll be visible on the
 		// front-end of the site. As a bonus, we'll make the hello message link to the
@@ -166,13 +186,13 @@ class Helloworld extends WireData implements Module {
 	 * @param HookEvent $event
 	 *
 	 */
-	public function pageHelloHookExample($event) {
+	public function pageHelloHookExample(HookEvent $event) {
 	
 		// determine the page that our method hook was called on
-		$page = $event->object; 
+		$page = $event->object; /** @var Page $page */
 		
 		// return our configurable hello message, along with some text indicating what the page is
-		$event->return = $this->helloMessage . " - This is page $page->path";
+		$event->return = $this->helloMessage . ' - ' . sprintf($this->_('This is page %s'), $page->path);
 		
 		if($event->arguments(0)) {
 			// if the method call had an argument, append it in the return value, just to
@@ -181,4 +201,35 @@ class Helloworld extends WireData implements Module {
 		}
 	}
 
+	/**
+	 * Module configuration inputs
+	 * 
+	 * I usually like having my configuration in the module file, but if you prefer your
+	 * configuration in a separate file, see the example in: Helloworld-example.config.php
+	 * 
+	 * @param InputfieldWrapper $inputfields
+	 * 
+	 */
+	public function getModuleConfigInputfields(InputfieldWrapper $inputfields) {
+		$modules = $this->wire()->modules;
+
+		/** @var InputfieldText $f */
+		$f = $modules->get('InputfieldText');
+		$f->attr('name', 'helloMessage');
+		$f->label = $this->_('Your hello world message');
+		$f->description = $this->_('This is here as an example of a configurable module property.');
+		$f->val($this->helloMessage);
+		$f->required = true;
+		$f->icon = 'smile-o';
+		$inputfields->add($f);
+
+		/** @var InputfieldToggle $f */
+		$f = $modules->get('InputfieldToggle');
+		$f->attr('name', 'useHello');
+		$f->label = $this->_('Use hello world message?');
+		$f->description = $this->_('This will make your hello world message display at the bottom of every page.');
+		$f->notes = $this->_('The hello message will only be shown to users with edit access to the page.');
+		$f->val($this->useHello);
+		$inputfields->add($f);
+	}
 }

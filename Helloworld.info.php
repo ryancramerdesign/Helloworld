@@ -1,4 +1,4 @@
-<?php
+<?php namespace ProcessWire;
 
 /**
  * Module info file that tells ProcessWire about this module. 
@@ -18,7 +18,7 @@ $info = array(
 	'title' => 'Hello World',
 
 	// version number (integer)
-	'version' => 3,
+	'version' => 4,
 
 	// summary is brief description of what this module is
 	'summary' => 'An example module used for demonstration purposes.',
@@ -34,6 +34,7 @@ $info = array(
 	// This is necessary for any modules that attach runtime hooks, otherwise those
 	// hooks won't get attached unless some other code calls the module on it's own.
 	// Note that autoload modules are almost always also 'singular' (seen above).
+	// Autoload modules take up memory so only use it when you need it!
 	'autoload' => true,
 
 	// Optional font-awesome icon name, minus the 'fa-' part
@@ -41,7 +42,7 @@ $info = array(
 
 	// Optionally describe what version of ProcessWire (or other modules) are required.
 	// To specify more modules, separate each with a comma (CSV) or make this an array.
-	'requires' => 'ProcessWire>=2.6.0',
+	'requires' => 'ProcessWire>=3.0.0',
 	
 	// for more properties that you can include in your module info, see comments 
 	// the file: /wire/core/Module.php
