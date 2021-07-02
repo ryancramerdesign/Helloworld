@@ -1,23 +1,23 @@
 <?php namespace ProcessWire;
 
 /**
- * Optional config file for Helloworld.module 
+ * Optional external config file for Helloworld.module 
  * 
- * This is just an example file that is not currently used. 
+ * This is what defines the inputs that appear on your module configuration
+ * screen in the admin. 
  * 
  * This is an alternative to using the getModuleConfigInputfields() method in 
  * in the HelloWorld.module.php file. This file is included here to demonstrate
- * this option but note that this module is not using it, so you can feel 
- * free to delete the file.
+ * this alternative option but note that the module does not use it unless it’s 
+ * in the same directory as the module. As a result, this file is here only for
+ * demonstration purposes and not currently used by the Helloworld module. 
  * 
- * If you do opt to use this file then rename it to: Helloworld.config.php
- * and remove the getModuleConfigInputfields() method in the module file. 
- * 
- * When present, the module will be configurable and the configurable properties
- * described here will be automatically populated to the module at runtime. 
+ * If you do want to use this external config file then you would move it into
+ * the parent directory (where the .module.php file is) and remove the 
+ * getModuleConfigInputfields() method that’s in the .module.php file. 
  * 
  * Note: to make any text translatable, wrap it with __('your text'); 
- * This will make that text translatable with PW's multi-language tools.
+ * This will make that text translatable with PW’s multi-language tools.
  * See the 'useHello' definition below (2nd field), for an example. 
  * 
  */

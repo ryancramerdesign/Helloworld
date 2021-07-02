@@ -33,15 +33,18 @@ class Helloworld extends WireData implements Module, ConfigurableModule {
 	public function __construct() {
 		parent::__construct();
 		$this->set('helloMessage', 'Hello World');
-		$this->set('useHello', 0); 
+		$this->set('useHello', 0);
+		// you may remove this method if you do not need it
 	}
 
 	/**
 	 * Initialize the module (optional)
 	 *
-	 * ProcessWire calls this method when the module is loaded. 
-	 * For 'autoload' modules, this will be called before ProcessWire’s API is ready. 
-	 * This is a good place to attach hooks (as is the 'ready' method).
+	 * ProcessWire calls this method when the module is loaded. At this stage, all
+	 * module configuration values have been populated.  
+	 * 
+	 * For “autoload” modules, this will be called before ProcessWire’s API is ready. 
+	 * This is a good place to attach hooks (as is the “ready” method).
 	 *
 	 */
 	public function init() {
@@ -72,24 +75,39 @@ class Helloworld extends WireData implements Module, ConfigurableModule {
 			// $user API variable. 
 			$event->return = sprintf(__('Hello %s'), $event->user->name); 
 		}); 
-	
-		// This example displays a special hello message when the user is editing
-		// the homepage only. 	
+
+		// Example of page editor hook
+		// Displays a hello notifiation when a superuser is editing the homepage
 		$this->addHookBefore('ProcessPageEdit::execute', function(HookEvent $event) {
-			$page = $event->object->getPage(); // getPage() is a method in ProcessPageEdit
-			if($page->id == 1) {
-				// user is editing the homepage
-				$event->message(sprintf(__('Hello %s - You are editing the homepage!'), $event->user->name));
+			$process = $event->object; /** @var ProcessPageEdit $process */
+			$page = $process->getPage(); // getPage() is a method in ProcessPageEdit
+			$user = $event->user; /** @var User $user */
+			if($page->id === 1 && $user->isSuperuser()) {
+				// superuser is editing the homepage
+				$event->message(sprintf(__('Hello %s - You are editing the homepage!'), $user->name));
 			} else {
-				// not the homepage, so we will stay silent
+				// user editing some page or it is not a superuser
 			}
 		});
 	
-		// Example of a URL hook (requires ProcessWire 3.0.173+) outputs Hello World"
-		// when you access the URL /hello/world/ on your site. More information at:
+		// Examples of a URL hooks (requires ProcessWire 3.0.173+):
 		// https://processwire.com/blog/posts/pw-3.0.173/
+		
+		// This example outputs "Hello World" when you access the URL /hello/world/
 		$this->addHook('/hello/world/', function(HookEvent $event) {
 			return __('Hello World');
+		});
+		
+		// Access URL /hello/planet/earth, /hello/planet/mars, or /hello/planet/jupiter
+		$this->addHook('/hello/planet/(earth|mars|jupiter)', function(HookEvent $event) {
+			return "Hello " . $event->arguments(1);
+		});
+		
+		// Example of using named arguments: try accessing /hello/neptune, etc.
+		$this->addHook('/hello/{planet}', function(HookEvent $event) {
+			$planet = $event->arguments('planet'); // get the argument by name
+			$planet = wire()->sanitizer->word($planet); // reduce to just 1st word
+			return "Hello $planet";
 		});
 	}
 
@@ -97,14 +115,18 @@ class Helloworld extends WireData implements Module, ConfigurableModule {
 	 * Called when ProcessWire’s API is ready (optional)
 	 * 
 	 * This optional method is similar to that of init() except that it is called
-	 * after the current $page has been determined a and the API is fully ready to use.
-	 * Use this method instead of (or in addition to) the init() method if your initialization
-	 * requires knowing what the current $this->page is. 
+	 * after the current $page has been determined and the API is fully ready to use.
+	 * Use this method instead of (or in addition to) the init() method if your 
+	 * initialization requires that the `$page` API variable is available.
 	 * 
 	 */
 	public function ready() {
-		// We don't have anything to do here, so this is just here as an explanation placeholder.
-		// You can remove this method if you don't need it. 
+		$page = $this->wire()->page; 
+		$user = $this->wire()->user; 
+		if($page->template->name === 'admin' && $user->isLoggedin()) {
+			// i.e. do something that only applies users in the admin
+		}
+		// You may remove this method if you do not need it
 	}
 
 	/**
@@ -202,10 +224,11 @@ class Helloworld extends WireData implements Module, ConfigurableModule {
 	}
 
 	/**
-	 * Module configuration inputs
+	 * Build module configuration inputs
 	 * 
-	 * I usually like having my configuration in the module file, but if you prefer your
-	 * configuration in a separate file, see the example in: Helloworld-example.config.php
+	 * If you prefer configuration can also be specified more declaratively with a PHP 
+	 * array in an external configuration file. See the /extras/Helloworld.config.php 
+	 * file included in this module’s files for an example. 
 	 * 
 	 * @param InputfieldWrapper $inputfields
 	 * 
@@ -232,4 +255,62 @@ class Helloworld extends WireData implements Module, ConfigurableModule {
 		$f->val($this->useHello);
 		$inputfields->add($f);
 	}
+
+	/**
+	 * Optional method that is called when the module version is upgraded
+	 * 
+	 * @param string $fromVersion From version string i.e. '1.2.3'
+	 * @param string $toVersion To version string i.e. '1.2.4'
+	 * 
+	 */
+	public function ___upgrade($fromVersion, $toVersion) {
+		// you may remove this method if you do not need it
+		if(version_compare($fromVersion, '0.0.3', '<=')) {
+			// user upgraded from version 3 or prior
+			$this->message("Congratulations on upgrading to version $toVersion"); 
+		}
+	}
+
+	/**
+	 * Optional method called when the module is installed
+	 * 
+	 * This method is typically used to create DB tables or install files
+	 * in the correct location, etc. Should the installation need to fail
+	 * for some reason, it should `throw new WireException('error description');`
+	 * 
+	 */
+	public function ___install() {
+		// Example of creating a DB table (example only, we don’t use it for anything)
+		// you may remove this method if you do not need it
+		$sql = "
+			CREATE TABLE hello_world (
+				id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+				name VARCHAR(128)
+			) ENGINE={$this->config->dbEngine} DEFAULT CHARSET={$this->config->dbCharset}
+		";
+		try {
+			$this->wire()->database->exec($sql);
+		} catch(\Exception $e) {
+			$this->error($e->getMessage());
+		}
+	}
+
+	/**
+	 * Optional method called when the module is uninstalled
+	 *
+	 * This method undoes anything that the install() method did.
+	 * For instance, remove installed DB tables, files, etc.
+	 *
+	 */
+	public function ___uninstall() {
+		// Example of dropping a DB table:  
+		// you may remove this method if you do not need it
+		try {
+			$this->wire()->database->exec("DROP TABLE hello_world");
+		} catch(\Exception $e) {
+			$this->error($e->getMessage());
+		}
+	}
+
+		
 }
